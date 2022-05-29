@@ -1,3 +1,4 @@
+const path = require('path');
 const fs = require("fs");
 const { memoize } = require("./utils.js");
 
@@ -9,7 +10,9 @@ const findReviewerFiles = memoize((folder) => {
 });
 
 const loadReviewer = (folder, file) => {
-	const reviewer = require(folder + file);
+	// Require outside this repo,
+	// into the specified folder
+	const reviewer = require(path.join(process.cwd(), folder, file));
 
 	// generator some fields if not specified
 	reviewer.name = reviewer.name || file;
