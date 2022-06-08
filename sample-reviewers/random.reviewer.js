@@ -2,10 +2,15 @@ module.exports = {
 	filter: async (pr) => {
 		if (pr.age.hours < pr.age.days) {
 			// noop, never the case, just testing
-			return false;
+			return 'This reason will never be visible';
 		}
 		
-		return pr.pr.number % 2 === 0; // even PRs
+		if (pr.pr.number % 2 === 0) {
+			return true; // yes, even PRs get a random review
+		}
+		else {
+			return 'Nah, this code doesnt like uneven PRs'
+		}
 	},
 	review: async (pr) => {
 		// await pr.resolvePatch();

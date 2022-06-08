@@ -55,9 +55,24 @@ const algo = async () => {
 
 		try {
 			let allActions = [];
+			let reasonsWhyNot = [];
+			
 			for (const reviewer of reviewers) {
 				const newActions = await review({ reviewer, pr });
-				allActions = [...allActions, ...newActions];
+				if (typeof newActions === 'string') {
+					if (newActions !== 'n/a') {
+						reasonsWhyNot.push(reviewer.name + ": " + newActions);
+					}
+				}
+				else {
+					allActions = [...allActions, ...newActions];
+				}
+			}
+			
+			if (allActions.length === 0 && reasonsWhyNot.length > 0) {
+				// Print out a summary why the PR was not getting any actions
+				console.log(' No action, because...');
+				console.log(' - ' + reasonsWhyNot.join('\n - '));
 			}
 
 			// Scan the resulting actions for processing

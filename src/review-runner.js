@@ -34,9 +34,9 @@ const loadReviewers = memoize((folder) => {
 });
 
 const review = async ({ reviewer, pr }) => {
-	const okay = await reviewer.filter(pr);
-	if (!okay) {
-		return []; // nothing desired
+	const okayOrReason = await reviewer.filter(pr);
+	if (okayOrReason !== true) {
+		return okayOrReason || 'n/a'; // nothing desired
 	}
 
 	try {
