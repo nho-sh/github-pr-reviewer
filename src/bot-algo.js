@@ -6,6 +6,7 @@ if (process.env.MOCK) {
 
 // Fetch the ENV variables after checking them
 const {
+	PR_NUMBER,
 	DRY_RUN,
 	GITHUB_REPO,
 	GITHUB_PASS,
@@ -45,12 +46,21 @@ const algo = async () => {
 	else {
 		console.log(`Found ${prs.length} open PRs to review`);
 	}
-
+	if (PR_NUMBER.length) {
+		console.log(`But will only check PRs:`, PR_NUMBER);
+	}
+	
 	const reviewers = loadReviewers(REVIEWER_FOLDER);
 	console.log(`With ${reviewers.length} reviewer(s)\n -`, reviewers.map(r => r.name).join('\n - '));
 	
 	for (const pr of prs) {
 		const prNum = pr.pr.number;
+		
+		// Want to check just 1 PR with --pr-number= or PR_NUMBER= ?
+		if (PR_NUMBER.length && !PR_NUMBER.includes(prNum)) {
+			continue;
+		}
+		
 		console.log(`\nChecking PR ${prNum}`);
 
 		try {
