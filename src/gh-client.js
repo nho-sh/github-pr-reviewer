@@ -1,4 +1,4 @@
-const { apiMethod, getJson, deleteJson, postJson, patchJson } = require('./utils.js');
+const { apiMethod, getJson, deleteJson, postJson, patchJson, putJson } = require('./utils.js');
 const PullRequest = require('./pull-request');
 const patchParser = require('./patch-parser');
 
@@ -275,10 +275,6 @@ const unlabelPR = async ({ repo, user, pass }, {
 		return true;
 	}
 
-	const reqData = {
-		label: label
-	};
-
 	const response = await deleteJson(
 		`https://api.github.com/repos/${repo}/issues/${prNumber}/labels/${label}`,
 		{
@@ -299,7 +295,7 @@ const mergePR = async ({ repo, user, pass }, {
 	}
 
 	const response = await putJson(
-		`https://api.github.com/repos/${repo}/issues/${prNumber}/merge`,
+		`https://api.github.com/repos/${repo}/pulls/${prNumber}/merge`,
 		{},
 		{
 			headers: ghHeaders(user, pass)

@@ -73,6 +73,9 @@ module.exports = {
 	postJson: (fullUrl, json, opts) => {
 		return apiMethod('POST', fullUrl, opts.headers, json, true);
 	},
+	putJson: (fullUrl, json, opts) => {
+		return apiMethod('PUT', fullUrl, opts.headers, json, true);
+	},
 	patchJson: (fullUrl, json, opts) => {
 		return apiMethod('PATCH', fullUrl, opts.headers, json, false);
 	},
