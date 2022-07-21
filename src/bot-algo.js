@@ -28,6 +28,7 @@ const {
 	listOpenPRs,
 	mergePR,
 	requestChanges,
+	reviewCommentPR,
 	unlabelPR,
 } = require("./gh-client.js");
 
@@ -91,6 +92,7 @@ const algo = async () => {
 			const comments = allActions.filter(a => a.action === 'comment');
 			const approve = allActions.find(a => a.action === 'approve');
 			const changesRequested = allActions.filter((a) => a.action === "request-changes");
+			const reviewComments = allActions.filter((a) => a.action === "review-comment");
 			const merge = allActions.find(a => a.action === 'merge');
 			const close = allActions.find(a => a.action === 'close');
 			
@@ -126,6 +128,18 @@ const algo = async () => {
 				const fullBody = comments.map(c => c.comment).join('\n- - -\n');
 				console.log(` - adding comment:`, fullBody);
 				DRY_RUN || await commentPR(ghAuth, { prNumber: prNum, body: fullBody });
+			}
+			
+			for (const rc of reviewComments) {
+				console.log(` - reviewing with a comment:`, rc.comment, `\n   path:`, rc.path, `Ln:`, rc.line);
+				DRY_RUN ||
+					(await reviewCommentPR(ghAuth, {
+						prNumber: prNum,
+						commit_id: pr.pr.commit_id,
+						body: rc.comment,
+						path: rc.path,
+						line: rc.line,
+					}));
 			}
 			
 			for (const change of changesRequested) {

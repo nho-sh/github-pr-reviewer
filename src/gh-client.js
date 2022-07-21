@@ -77,7 +77,7 @@ const fetchComments = async ({ repo, user, pass }, prID) => {
 	const headers = ghHeaders(user, pass);
 	headers["Accept"] = "application/vnd.github.v3+json";
 
-	const prReviews = await apiMethod(
+	const prComments = await apiMethod(
 		"GET",
 		`https://api.github.com/repos/${repo}/issues/${prID}/comments`,
 		headers,
@@ -85,16 +85,15 @@ const fetchComments = async ({ repo, user, pass }, prID) => {
 		true
 	);
 
-	return prReviews;
+	return prComments;
 };
-
 
 const fetchPrStatus = async ({ repo, user, pass }, commitID) => {
 
 	const headers = ghHeaders(user, pass);
 	headers['Accept'] = 'application/vnd.github.v3+json';
 
-	const prDiff = await apiMethod(
+	const prStatus = await apiMethod(
 		'GET',
 		`https://api.github.com/repos/${repo}/commits/${commitID}/status`,
 		headers,
@@ -102,7 +101,7 @@ const fetchPrStatus = async ({ repo, user, pass }, commitID) => {
 		true
 	);
 
-	return prDiff;
+	return prStatus;
 };
 
 const listOpenPRs = async ({ repo, user, pass }) => {
@@ -204,6 +203,37 @@ const commentPR = async ({ repo, user, pass }, {
 
 	const response = await postJson(
 		`https://api.github.com/repos/${repo}/issues/${prNumber}/comments`,
+		reqData,
+		{
+			headers: ghHeaders(user, pass)
+		}
+	);
+
+	processGhResponse(response);
+
+	return true;
+};
+
+const reviewCommentPR = async ({ repo, user, pass }, {
+	prNumber,
+	body,
+	commit_id,
+	path, // file on which the comment applies
+	line, // of diff where it applies (counter in diff line numbering, starting at 1)
+}) => {
+	if (process.env.MOCK) {
+		return true;
+	}
+
+	const reqData = {
+		body: body,
+		commit_id: commit_id,
+		path: path,
+		line: line,
+	};
+	
+	const response = await postJson(
+		`https://api.github.com/repos/${repo}/pulls/${prNumber}/comments`,
 		reqData,
 		{
 			headers: ghHeaders(user, pass)
@@ -331,14 +361,15 @@ const closePR = async ({ repo, user, pass }, {
 };
 
 module.exports = {
-	commentPR,
-	labelPR,
-	unlabelPR,
-	listOpenPRs,
-	fetchPrPatch,
-	fetchComments,
-	mergePR,
-	closePR,
 	approvePR,
+	closePR,
+	commentPR,
+	fetchComments,
+	fetchPrPatch,
+	labelPR,
+	listOpenPRs,
+	mergePR,
 	requestChanges,
+	reviewCommentPR,
+	unlabelPR,
 };

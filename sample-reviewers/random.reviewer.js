@@ -19,6 +19,7 @@ module.exports = {
 		
 		await pr.resolveStatus();
 		await pr.resolveReviews();
+		await pr.resolveFiles();
 		// console.log(pr.status);
 		
 		const allActions = [
@@ -28,6 +29,7 @@ module.exports = {
 			[{ action: 'label', labels: ['A', 'B'] }],
 			[{ action: 'unlabel', label: 'A'}],
 			[{ action: 'request-changes', changes: 'This looks fuky'}],
+			[{ action: 'review-comment', comment: 'Better change this, i mean, come-on!', path: pr.files[0], line: 1}],
 		];
 		return allActions[Math.floor(Math.random() * allActions.length)];
 	}
