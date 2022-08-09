@@ -177,7 +177,7 @@ const approvePR = async ({ repo, user, pass }, {
 	};
 	
 	const response = await postJson(
-		`https://api.github.com/repos/${repo}/pulls/${prNumber}`,
+		`https://api.github.com/repos/${repo}/pulls/${prNumber}/reviews`,
 		reqData,
 		{
 			headers: ghHeaders(user, pass)
