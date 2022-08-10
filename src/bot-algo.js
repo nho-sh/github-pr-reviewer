@@ -30,6 +30,7 @@ const {
 	requestChanges,
 	reviewCommentPR,
 	unlabelPR,
+	updateBranch,
 } = require("./gh-client.js");
 
 const algo = async () => {
@@ -71,9 +72,7 @@ const algo = async () => {
 			for (const reviewer of reviewers) {
 				const newActions = await review({ reviewer, pr });
 				if (typeof newActions === 'string') {
-					if (newActions !== 'n/a') {
-						reasonsWhyNot.push(reviewer.name + ": " + newActions);
-					}
+					reasonsWhyNot.push(reviewer.name + ": " + newActions);
 				}
 				else {
 					allActions = [...allActions, ...newActions];
@@ -95,6 +94,7 @@ const algo = async () => {
 			const reviewComments = allActions.filter((a) => a.action === "review-comment");
 			const merge = allActions.find(a => a.action === 'merge');
 			const close = allActions.find(a => a.action === 'close');
+			const shouldUpdateBranch = allActions.find(a => a.action === 'update-branch');
 			
 			// Group all the labels we want to add
 			const allAddLabels = addLabels.map(l => l.labels).flat();
@@ -146,6 +146,11 @@ const algo = async () => {
 				console.log(` - requesting changes:`, change.changes);
 				DRY_RUN ||
 					(await requestChanges(ghAuth, { prNumber: prNum, body: change.changes }));
+			}
+			
+			if (shouldUpdateBranch) {
+				console.log(` - updating branch with base`);
+				DRY_RUN || await updateBranch(ghAuth, { prNumber: prNum });
 			}
 			
 			if (approve) {

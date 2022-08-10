@@ -98,6 +98,7 @@ is skipped.
 | Merge a PR | `{ action: 'merge' }` | The user will attempt to merge (which might fail if some repo requirements are not met) |
 | Request changes | `{ action: 'request-changes', changes: '... please do so and so ...' }` | Request changes to be made. Use the description field to summarize what is wrong. |
 | Review by adding a comment | `{ action: 'review-comment', comment: 'Please ...', path: 'relative path of the file to change', line: 1}` | This will begin or continue a review of a PR and will expect it to be Resolved. Use the required `path` + `line` to specify where the problem originates. |
+| Update branch | `{ action: 'update-branch' }` | Update your pull request with all the changes from the base branch, by merging it in. |
 
 ### Avoiding repeated reviewing
 

@@ -13,7 +13,7 @@ const ghHeaders = (user, pass) => {
 
 const processGhResponse = (response) => {
 	if (response.message) {
-		console.log(response.message);
+		console.log("   GH: " + response.message);
 	}
 
 	if (response.errors) {
@@ -110,7 +110,7 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 		return [];
 	}
 	
-	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls`, {
+	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls?per_page=100`, {
 		headers: ghHeaders(user, pass)
 	});
 	processGhResponse(prs);
@@ -297,26 +297,6 @@ const labelPR = async ({ repo, user, pass }, {
 	return true;
 };
 
-const unlabelPR = async ({ repo, user, pass }, {
-	prNumber,
-	label
-}) => {
-	if (process.env.MOCK) {
-		return true;
-	}
-
-	const response = await deleteJson(
-		`https://api.github.com/repos/${repo}/issues/${prNumber}/labels/${label}`,
-		{
-			headers: ghHeaders(user, pass)
-		}
-	);
-
-	processGhResponse(response);
-
-	return true;
-};
-
 const mergePR = async ({ repo, user, pass }, {
 	prNumber
 }) => {
@@ -360,6 +340,46 @@ const closePR = async ({ repo, user, pass }, {
 	return true;
 };
 
+const unlabelPR = async ({ repo, user, pass }, {
+	prNumber,
+	label
+}) => {
+	if (process.env.MOCK) {
+		return true;
+	}
+
+	const response = await deleteJson(
+		`https://api.github.com/repos/${repo}/issues/${prNumber}/labels/${label}`,
+		{
+			headers: ghHeaders(user, pass)
+		}
+	);
+
+	processGhResponse(response);
+
+	return true;
+};
+
+const updateBranch = async ({ repo, user, pass }, {
+	prNumber
+}) => {
+	if (process.env.MOCK) {
+		return true;
+	}
+
+	const response = await putJson(
+		`https://api.github.com/repos/${repo}/pulls/${prNumber}/update-branch`,
+		{},
+		{
+			headers: ghHeaders(user, pass)
+		}
+	);
+
+	processGhResponse(response);
+
+	return true;
+};
+
 module.exports = {
 	approvePR,
 	closePR,
@@ -372,4 +392,5 @@ module.exports = {
 	requestChanges,
 	reviewCommentPR,
 	unlabelPR,
+	updateBranch,
 };
