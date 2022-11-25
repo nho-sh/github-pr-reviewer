@@ -88,6 +88,20 @@ const fetchComments = async ({ repo, user, pass }, prID) => {
 	return prComments;
 };
 
+const fetchCommits = async ({ repo, user, pass }, prID) => {
+	const headers = ghHeaders(user, pass);
+	
+	const commits = await getJson(
+		`https://api.github.com/repos/${repo}/pulls/${prID}/commits`,
+		{
+			headers: headers
+		}
+	);
+	processGhResponse(commits);
+
+	return commits;
+};
+
 const fetchPrStatus = async ({ repo, user, pass }, commitID) => {
 
 	const headers = ghHeaders(user, pass);
@@ -117,7 +131,6 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 	
 	const resultPrs = [];
 	for (const pr of prs) {
-		// console.log(pr);
 		const prObj = new PullRequest({
 			id: pr.id,
 			url: pr.url,
@@ -128,6 +141,7 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 			state: pr.state,
 			locket: pr.locked,
 			head: pr.head,
+			base: pr.base,
 			created_at: pr.created_at, // ISO timestamp, like 2022-04-20T21:25:48Z
 			updated_at: pr.updated_at, // ISO timestamp, like 2022-04-20T21:25:48Z
 			draft: pr.draft,
@@ -137,9 +151,17 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 			commit_id: pr.head.sha
 		});
 		
+		prObj.resolveBaseBranch = async () => {
+			prObj.base_branch = await fetchBranch({ repo, user, pass }, prObj.pr.base.ref);
+			prObj.resolveBaseBranch = function() {};
+		};
 		prObj.resolveComments = async () => {
 			prObj.comments = await fetchComments({ repo, user, pass }, prObj.pr.number);
 			prObj.resolveComments = function() {};
+		};
+		prObj.resolveCommits = async () => {
+			prObj.commits = await fetchCommits({ repo, user, pass }, prObj.pr.number);
+			prObj.resolveCommits = function () { };
 		};
 		prObj.resolveFiles = async () => {
 			prObj.files = await fetchPrFiles({ repo, user, pass }, prObj.pr.number);
@@ -360,6 +382,25 @@ const unlabelPR = async ({ repo, user, pass }, {
 	return true;
 };
 
+const fetchBranch = async ({ repo, user, pass },
+	branchName
+) => {
+	if (process.env.MOCK) {
+		return true;
+	}
+
+	const branch = await getJson(
+		`https://api.github.com/repos/${repo}/branches/${branchName}`,
+		{
+			headers: ghHeaders(user, pass)
+		}
+	);
+
+	processGhResponse(branch);
+
+	return branch;
+};
+
 const updateBranch = async ({ repo, user, pass }, {
 	prNumber
 }) => {
@@ -384,6 +425,8 @@ module.exports = {
 	approvePR,
 	closePR,
 	commentPR,
+	fetchBranch,
+	fetchCommits,
 	fetchComments,
 	fetchPrPatch,
 	labelPR,

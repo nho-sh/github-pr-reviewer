@@ -4,10 +4,11 @@ module.exports = {
 		return true;
 	},
 	review: async (pr) => {
+		// await pr.resolveComments();
+		// await pr.resolveFiles();
 		// await pr.resolvePatch();
 		// await pr.resolveReviews();
 		// await pr.resolveStatus();
-		// await pr.resolveReviews();
 		
 		// return [{ action: 'approve' }];
 		// return [{ action: 'close' }];

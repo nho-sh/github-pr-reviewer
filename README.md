@@ -1,6 +1,10 @@
 # Github PR Reviewer
 
-A nodejs based Github PR Reviewer which can be easily turned into a bot. This bot works on a GitHub repo, by finding open PR's
+> Why do a 10 minute task, when you can automate it it in 10 days?
+>
+> — a programmer
+
+A `nodejs` based Github PR Reviewer which can be easily turned into a bot. This works on a GitHub repo, by finding open PR's
 and taking actions on them.
 
 Github PR Reviewer makes it very easy to interact with open pull requests, allowing you to focus fully on automating checks. Every PR will be passing through your own rule-set, and where needed, the actions you define will be executed for each PR.
@@ -55,8 +59,8 @@ A reviewer is a collection of Javascript files inside a folder. It's recommended
 ```js
 module.exports = {
   filter: async (pr) => {
-    // optionally fetch more PR details
-    // (see Fetching Details)
+    // optionally fetch more PR details (increases api calls to GH)
+    // (see Resolving additional PR details)
 
     // if this reviewer applies
     return true; 
@@ -67,11 +71,11 @@ module.exports = {
     return 'A string with the reason why not';
   },
   review: async (pr) => {
-    // optionally fetch more PR details
-    // (see Fetching Details)
+    // optionally fetch more PR details (increases api calls to GH)
+    // (see Resolving additional PR details)
 
     // an array of actions that have to be taken
-    // (See Actions)
+    // (see Take actions on PR's)
     return [ ... actions ... ]; 
     
     // OR
@@ -93,21 +97,21 @@ is skipped.
 | Approving | `{ action: 'approve' }` | The user running the reviewer will approve the PR |
 | Closing | `{ action: 'close' }` | The user running the reviewer will close the PR |
 | Adding a comment | `{ action: 'comment', comment: '...' }` | A message will be added to the PR (not to the files). |
-| Labelling a PR | `{ action: 'label', labels: [ 'A', 'B' ] }` | Add one or more labels to the PR. Non-existing labels will automatically be created by Github |
-| Unlabelling a PR | `{ action: 'unlabel', label: 'A'}` | Remove a single label from a PR. Note that you cannot use an array for this action. |
+| Labeling a PR | `{ action: 'label', labels: [ 'A', 'B' ] }` | Add one or more labels to the PR. Non-existing labels will automatically be created by Github |
+| Unlabeling a PR | `{ action: 'unlabel', label: 'A'}` | Remove a single label from a PR. Note that you cannot use an array for this action. |
 | Merge a PR | `{ action: 'merge' }` | The user will attempt to merge (which might fail if some repo requirements are not met) |
 | Request changes | `{ action: 'request-changes', changes: '... please do so and so ...' }` | Request changes to be made. Use the description field to summarize what is wrong. |
 | Review by adding a comment | `{ action: 'review-comment', comment: 'Please ...', path: 'relative path of the file to change', line: 1}` | This will begin or continue a review of a PR and will expect it to be Resolved. Use the required `path` + `line` to specify where the problem originates. |
-| Update branch | `{ action: 'update-branch' }` | Update your pull request with all the changes from the base branch, by merging it in. |
+| Update branch | `{ action: 'update-branch' }` | Update your pull request with all the changes from the base branch, by merging it in. This is best used with `await pr.behindOnBase()` to avoid updating the PR branch with empty commits.  |
 
 ### Avoiding repeated reviewing
 
-Note about avoiding the same actions: the reviewer does NOT keep any state on previously taken actions.
-It's up to the implementor to code persistence, if desired, into the `*.reviewer.js` files.
+Note about avoiding the same actions: Github PR Reviewer does NOT keep any state on previously taken actions.
+It's up to you to implement persistence, if desired, into the `*.reviewer.js` files.
 
 However, a simple state can also be kept on the PR itself, by first retrieving information from the PR,
-and checking if a previous action is taken. For example, by authoring a comment with
-a magic word in it, and later, skipping PR's with that expected magic word. This has the drawback that changes do not invalidate previous reviews.
+and checking if a previous action is taken. For example, by add a comment with
+a magic word in it, and later, skipping PR's with that expected magic word in a comment (use `resolveComments`). This has the drawback that changes do not invalidate previous reviews, but works fine for simple cases.
 
 ### Resolving additional PR details
 
@@ -118,12 +122,22 @@ To avoid API limits, and speed up the reviewing, resolving additional data is op
 <tr>
   <th>Resolver</th>
   <th>Spec</th>
-  <th>Effect</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Base Branch</td>
+  <td><code>await pr.resolveBaseBranch()</code></td>
+  <td>This will populate the PR data <code>pr.base_branch</code>, which is a object describing the Github the branch you provide. For full specification, check the Github specification at https://docs.github.com/en/rest/branches/branches#get-a-branch</td>
+</tr>
+<tr>
+  <td>Commits</td>
+  <td><code>await pr.resolveCommits()</code></td>
+  <td>This will populate the PR data <code>pr.commits</code>, which is an array of Github commits on the branch. For full specification, check the Github commit specification at https://docs.github.com/en/rest/issues/comments#get-an-issue-comment</td>
 </tr>
 <tr>
   <td>Comments</td>
   <td><code>await pr.resolveComments()</code></td>
-  <td>This will populate the PR data <code>pr.comments</code>, which is an array of Github comment objects. For full specification, check the Github comment specification at https://docs.github.com/en/rest/issues/comments#get-an-issue-comment</td>
+  <td>This will populate the PR data <code>pr.comments</code>, which is an array of Github comment objects. For full specification, check the Github comment specification at https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request</td>
 </tr>
 <tr>
   <td>Files</td>
@@ -174,7 +188,28 @@ This will populate the PR data <code>pr.patch</code>, which contains both the or
 </tr>
 </table>
 
+### Extra helpers available on PRs
+
+These methods are available during reviewer execution:
+
+<table>
+<tr>
+  <th>Method</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td><code>await pr.behindOnBase()</code></td>
+  <td>Returns <code>true</code> if the PR is not fully up-to-date with the base branch. This combines well with the <code>update-branch</code> action, which by default in GH, will always update, creating empty merge commits. Use this method to detect if something is really not included yet.</td>
+</tr>
+</table>
+
 ### Testing your reviewer before putting it live
 
 No integration tests exist atm, but use the DRY_RUN on real
 repositories to safely try out your reviewers.
+
+```sh
+DRY_RUN=true \
+... \
+node index.js
+```
