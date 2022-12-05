@@ -20,7 +20,7 @@ const loadReviewer = (folder, file) => {
 	reviewer.filter = reviewer.filter || (() => true); // default all prs
 	reviewer.review =
 		reviewer.review ||
-		((pr) => {
+		(() => {
 			console.warn("Reviewer does nothing: " + reviewer.path);
 			return [];
 		});

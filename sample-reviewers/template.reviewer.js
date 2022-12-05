@@ -1,9 +1,13 @@
 module.exports = {
 	filter: async (pr) => {
+		console.log(pr);
+		
 		// can also resolve here
 		return true;
 	},
 	review: async (pr) => {
+		console.log(pr);
+
 		// await pr.resolveComments();
 		// await pr.resolveFiles();
 		// await pr.resolvePatch();
