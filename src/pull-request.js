@@ -8,10 +8,14 @@ module.exports = class PullRequest {
 		// for every specific PR
 		this.resolveBaseBranch = null;
 		this.resolveComments = null;
+		this.resolveCommentsPage = 1;
 		this.resolveCommits = null;
+		this.resolveCommitsPage = 1;
 		this.resolveFiles = null;
+		this.resolveFilesPage = 1;
 		this.resolvePatch = null;
 		this.resolveReviews = null;
+		this.resolveReviewsPage = 1;
 		this.resolveStatus = null;
 
 		// Placeholders

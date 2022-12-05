@@ -127,22 +127,22 @@ To avoid API limits, and speed up the reviewing, resolving additional data is op
 <tr>
   <td>Base Branch</td>
   <td><code>await pr.resolveBaseBranch()</code></td>
-  <td>This will populate the PR data <code>pr.base_branch</code>, which is a object describing the Github the branch you provide. For full specification, check the Github specification at https://docs.github.com/en/rest/branches/branches#get-a-branch</td>
+  <td>This will populate the PR data <code>pr.base_branch</code>, which is a object describing the Github the branch you provide. For full specification, check the Github specification at https://docs.github.com/en/rest/branches/branches#get-a-branch.</td>
 </tr>
 <tr>
   <td>Commits</td>
   <td><code>await pr.resolveCommits()</code></td>
-  <td>This will populate the PR data <code>pr.commits</code>, which is an array of Github commits on the branch. For full specification, check the Github commit specification at https://docs.github.com/en/rest/issues/comments#get-an-issue-comment</td>
+  <td>This will populate the PR data <code>pr.commits</code>, which is an array of Github commits on the branch. For full specification, check the Github commit specification at https://docs.github.com/en/rest/issues/comments#get-an-issue-comment.<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
 </tr>
 <tr>
   <td>Comments</td>
   <td><code>await pr.resolveComments()</code></td>
-  <td>This will populate the PR data <code>pr.comments</code>, which is an array of Github comment objects. For full specification, check the Github comment specification at https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request</td>
+  <td>This will populate the PR data <code>pr.comments</code>, which is an array of Github comment objects. For full specification, check the Github comment specification at https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request.<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
 </tr>
 <tr>
   <td>Files</td>
   <td><code>await pr.resolveFiles()</code></td>
-  <td>This will populate the PR data <code>pr.files</code>, which is a array of relative file paths (strings)</td>
+  <td>This will populate the PR data <code>pr.files</code>, which is a array of relative file paths (strings).<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
 </tr>
 <tr>
   <td>Patch / Diff</td>
@@ -179,7 +179,7 @@ This will populate the PR data <code>pr.patch</code>, which contains both the or
 <tr>
   <td>Reviews</td>
   <td><code>await pr.resolveReviews()</code></td>
-  <td>This will populate the PR data <code>pr.reviews</code>, which is an array of objects.</td>
+  <td>This will populate the PR data <code>pr.reviews</code>, which is an array of objects.<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
 </tr>
 <tr>
   <td>Status</td>

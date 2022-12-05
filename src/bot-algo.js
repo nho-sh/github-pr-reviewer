@@ -74,6 +74,9 @@ const algo = async () => {
 				if (typeof newActions === 'string') {
 					reasonsWhyNot.push(reviewer.name + ": " + newActions);
 				}
+				else if (newActions.length === 0) {
+					reasonsWhyNot.push(reviewer.name + ": " + "filter() was okay (== true), but no action was taken");
+				}
 				else {
 					allActions = [...allActions, ...newActions];
 				}

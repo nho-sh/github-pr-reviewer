@@ -2,6 +2,18 @@ const { apiMethod, getJson, deleteJson, postJson, patchJson, putJson } = require
 const PullRequest = require('./pull-request');
 const patchParser = require('./patch-parser');
 
+const pageSize = {
+	comments: 100,
+	commits: 100,
+	files: 100,
+	prs: 100,
+	reviews: 100,
+};
+
+const defaultOpts = {
+	page: 1
+};
+
 const ghHeaders = (user, pass) => {
 	const basicAuth = Buffer.from(`${user}:${pass}`).toString('base64');
 
@@ -21,12 +33,12 @@ const processGhResponse = (response) => {
 	}
 };
 
-const fetchPrFiles = async ({ repo, user, pass }, prID) => {
+const fetchPrFiles = async ({ repo, user, pass }, prID, { page = 1 } = defaultOpts) => {
 	
 	const headers = ghHeaders(user, pass);
 	
 	const pr = await getJson(
-		`https://api.github.com/repos/${repo}/pulls/${prID}/files`,
+		`https://api.github.com/repos/${repo}/pulls/${prID}/files?per_page=${pageSize.files}&page=${page}`,
 		{
 			headers: headers
 		}
@@ -57,14 +69,14 @@ const fetchPrPatch = async ({ repo, user, pass }, prID) => {
 	return prDiff;
 };
 
-const fetchPrReviews = async ({ repo, user, pass }, prID) => {
+const fetchPrReviews = async ({ repo, user, pass }, prID, { page = 1 } = defaultOpts) => {
 
 	const headers = ghHeaders(user, pass);
 	headers['Accept'] = 'application/vnd.github.v3+json';
 
 	const prReviews = await apiMethod(
 		'GET',
-		`https://api.github.com/repos/${repo}/pulls/${prID}/reviews`,
+		`https://api.github.com/repos/${repo}/pulls/${prID}/reviews?per_page=${pageSize.reviews}&page=${page}`,
 		headers,
 		null,
 		true
@@ -73,13 +85,13 @@ const fetchPrReviews = async ({ repo, user, pass }, prID) => {
 	return prReviews;
 };
 
-const fetchComments = async ({ repo, user, pass }, prID) => {
+const fetchComments = async ({ repo, user, pass }, prID, { page = 1 } = defaultOpts) => {
 	const headers = ghHeaders(user, pass);
 	headers["Accept"] = "application/vnd.github.v3+json";
 
 	const prComments = await apiMethod(
 		"GET",
-		`https://api.github.com/repos/${repo}/issues/${prID}/comments`,
+		`https://api.github.com/repos/${repo}/issues/${prID}/comments?per_page=${pageSize.comments}&page=${page}`,
 		headers,
 		null,
 		true
@@ -88,11 +100,11 @@ const fetchComments = async ({ repo, user, pass }, prID) => {
 	return prComments;
 };
 
-const fetchCommits = async ({ repo, user, pass }, prID) => {
+const fetchCommits = async ({ repo, user, pass }, prID, { page = 1 } = defaultOpts) => {
 	const headers = ghHeaders(user, pass);
 	
 	const commits = await getJson(
-		`https://api.github.com/repos/${repo}/pulls/${prID}/commits`,
+		`https://api.github.com/repos/${repo}/pulls/${prID}/commits?per_page=${pageSize.commits}&page=${page}`,
 		{
 			headers: headers
 		}
@@ -118,13 +130,13 @@ const fetchPrStatus = async ({ repo, user, pass }, commitID) => {
 	return prStatus;
 };
 
-const listOpenPRs = async ({ repo, user, pass }) => {
+const listOpenPRs = async ({ repo, user, pass }, { page = 1 } = defaultOpts) => {
 	
 	if (process.env.MOCK) {
 		return [];
 	}
 	
-	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls?per_page=100`, {
+	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls?per_page=${pageSize.prs}&page=${page}`, {
 		headers: ghHeaders(user, pass)
 	});
 	processGhResponse(prs);
@@ -156,16 +168,55 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 			prObj.resolveBaseBranch = function() {};
 		};
 		prObj.resolveComments = async () => {
-			prObj.comments = await fetchComments({ repo, user, pass }, prObj.pr.number);
-			prObj.resolveComments = function() {};
+			const comments = await fetchComments({ repo, user, pass }, prObj.pr.number, { page: prObj.resolveCommentsPage });
+			
+			prObj.comments = [
+				...(prObj.comments || []),
+				...comments,
+			];
+
+			prObj.resolveCommentsPage += 1;
+
+			if (comments.length < pageSize.comments) {
+				prObj.resolveComments = function() {};
+				return false; // Indicate the end was reached
+			}
+
+			return true; // Indicate more can be fetched if desired
 		};
 		prObj.resolveCommits = async () => {
-			prObj.commits = await fetchCommits({ repo, user, pass }, prObj.pr.number);
-			prObj.resolveCommits = function () { };
+			const commits = await fetchCommits({ repo, user, pass }, prObj.pr.number, { page: prObj.resolveCommitsPage });
+
+			prObj.commits = [
+				...(prObj.commits || []),
+				...commits
+			];
+
+			prObj.resolveCommitsPage += 1;
+
+			if (commits.length < pageSize.commits) {
+				prObj.resolveCommits = function () { };
+				return false; // Indicate the end was reached
+			}
+
+			return true; // Indicate more can be fetched if desired
 		};
 		prObj.resolveFiles = async () => {
-			prObj.files = await fetchPrFiles({ repo, user, pass }, prObj.pr.number);
-			prObj.resolveFiles = function() {};
+			const files = await fetchPrFiles({ repo, user, pass }, prObj.pr.number, { page: prObj.resolveFilesPage });
+
+			prObj.files = [
+				...(prObj.files || []),
+				...files
+			];
+
+			prObj.resolveFilesPage += 1;
+
+			if (files.length < pageSize.files) {
+				prObj.resolveFiles = function () { };
+				return false; // Indicate the end was reached
+			}
+
+			return true; // Indicate more can be fetched if desired
 		};
 		prObj.resolvePatch = async () => {
 			const patch = await fetchPrPatch({ repo, user, pass }, prObj.pr.number);
@@ -173,8 +224,21 @@ const listOpenPRs = async ({ repo, user, pass }) => {
 			prObj.resolvePatch = function () { };
 		};
 		prObj.resolveReviews = async () => {
-			prObj.reviews = await fetchPrReviews({ repo, user, pass }, prObj.pr.number);
-			prObj.resolveReviews = function () { };
+			const reviews = await fetchPrReviews({ repo, user, pass }, prObj.pr.number, { page: prObj.resolveReviewsPage });
+
+			prObj.reviews = [
+				...(prObj.reviews || []),
+				...reviews
+			];
+
+			prObj.resolveReviewsPage += 1;
+
+			if (reviews.length < pageSize.reviews) {
+				prObj.resolveReviews = function () { };
+				return false; // Indicate the end was reached
+			}
+
+			return true; // Indicate more can be fetched if desired
 		};
 		prObj.resolveStatus = async () => {
 			prObj.status = await fetchPrStatus({ repo, user, pass }, prObj.pr.commit_id);
