@@ -96,6 +96,7 @@ const algo = async () => {
 			const changesRequested = allActions.filter((a) => a.action === "request-changes");
 			const reviewComments = allActions.filter((a) => a.action === "review-comment");
 			const merge = allActions.find(a => a.action === 'merge');
+			const mergeMethod = (allActions.find(a => a.action === 'merge' && a.method) || { method: 'merge' }).method;
 			const close = allActions.find(a => a.action === 'close');
 			const shouldUpdateBranch = allActions.find(a => a.action === 'update-branch');
 			
@@ -166,7 +167,7 @@ const algo = async () => {
 			}
 			else if (merge) {
 				console.log(` - merging`);
-				DRY_RUN || await mergePR(ghAuth, { prNumber: prNum });
+				DRY_RUN || await mergePR(ghAuth, { prNumber: prNum, method: mergeMethod });
 			}
 			else if (close) {
 				console.log(` - closing, do not want`);
