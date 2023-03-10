@@ -99,7 +99,7 @@ is skipped.
 | Adding a comment | `{ action: 'comment', comment: '...' }` | A message will be added to the PR (not to the files). |
 | Labeling a PR | `{ action: 'label', labels: [ 'A', 'B' ] }` | Add one or more labels to the PR. Non-existing labels will automatically be created by Github |
 | Unlabeling a PR | `{ action: 'unlabel', label: 'A'}` | Remove a single label from a PR. Note that you cannot use an array for this action. |
-| Merge a PR | `{ action: 'merge' }` | The user will attempt to merge (which might fail if some repo requirements are not met) |
+| Merge a PR | `{ action: 'merge', method?: 'merge\|squash\|rebase' }` | The user will attempt to merge (which might fail if some repo requirements are not met). Use the `method` value to choose the merge strategy, or omit for the default `merge`. |
 | Request changes | `{ action: 'request-changes', changes: '... please do so and so ...' }` | Request changes to be made. Use the description field to summarize what is wrong. |
 | Review by adding a comment | `{ action: 'review-comment', comment: 'Please ...', path: 'relative path of the file to change', line: 1}` | This will begin or continue a review of a PR and will expect it to be Resolved. Use the required `path` + `line` to specify where the problem originates. |
 | Update branch | `{ action: 'update-branch' }` | Update your pull request with all the changes from the base branch, by merging it in. This is best used with `await pr.behindOnBase()` to avoid updating the PR branch with empty commits.  |
