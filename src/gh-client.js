@@ -383,8 +383,10 @@ const labelPR = async ({ repo, user, pass }, {
 	return true;
 };
 
+// https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#merge-a-pull-request
 const mergePR = async ({ repo, user, pass }, {
-	prNumber
+	prNumber,
+	method
 }) => {
 	if (process.env.MOCK) {
 		return true;
@@ -392,7 +394,9 @@ const mergePR = async ({ repo, user, pass }, {
 
 	const response = await putJson(
 		`https://api.github.com/repos/${repo}/pulls/${prNumber}/merge`,
-		{},
+		{
+			merge_method: method || 'merge' // merge / squash / rebase
+		},
 		{
 			headers: ghHeaders(user, pass)
 		}
