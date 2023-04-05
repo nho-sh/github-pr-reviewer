@@ -10,9 +10,27 @@ const parsePatch = (raw) => {
 		diffs: diffs.map(diff => {
 			const [ diffHeader, ...hunks ] = diff.split('\n@@');
 			const diffLines = diffHeader.split('\n');
+			
+			// Parse files changed/added/deleted
+			let sourceFile = diffLines.find(l => l.startsWith('--- ')).substr('--- '.length);
+			if (sourceFile === '/dev/null') {
+				// New file, source is ''
+				sourceFile = '';
+			}
+			else {
+				sourceFile = sourceFile.substring('a/'.length);
+			}
+			let targetFile = diffLines.find(l => l.startsWith('+++ ')).substr('+++ '.length);
+			if (targetFile === '/dev/null') {
+				// Deleted file, target is ''
+				targetFile = '';
+			}
+			else {
+				targetFile = targetFile.substring('b/'.length);
+			}
 			return {
-				sourceFile: diffLines.find(l => l.startsWith('--- a/')).substr('--- a/'.length),
-				targetFile: diffLines.find(l => l.startsWith('+++ b/')).substr('+++ b/'.length),
+				sourceFile,
+				targetFile,
 				hunks: hunks.map(hunk => {
 					const endOfChanges = hunk.indexOf(' @@');
 					const lineChanges = hunk.substr(0, endOfChanges).trim();
