@@ -157,8 +157,8 @@ This will populate the PR data <code>pr.patch</code>, which contains both the or
   header: 'parsed patch header',
   diffs: [
     {
-      sourceFile: 'package.json',
-      targetFile: 'package.json-backup',
+      sourceFile: 'package.json', // Empty string if it's a new file
+      targetFile: 'package.json-backup', // Empty string if it's a deleted file
       hunks: [
         {
           linesAdded: 1,
