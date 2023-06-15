@@ -12,22 +12,51 @@ const parsePatch = (raw) => {
 			const diffLines = diffHeader.split('\n');
 			
 			// Parse files changed/added/deleted
-			let sourceFile = diffLines.find(l => l.startsWith('--- ')).substr('--- '.length);
-			if (sourceFile === '/dev/null') {
-				// New file, source is ''
-				sourceFile = '';
+			// Or just a file rename
+			const sourceLine =
+				diffLines.find(l => l.startsWith('--- '))
+				||
+				diffLines.find(l => l.startsWith('rename from '));
+			
+			let sourceFile = null;
+			if (sourceLine.startsWith('rename from ')) {
+				sourceFile = sourceLine.substring('rename from '.length);
 			}
 			else {
-				sourceFile = sourceFile.substring('a/'.length);
+				sourceFile = sourceLine.substr('--- '.length)
+				
+				if (sourceFile === '/dev/null') {
+					// New file, source is ''
+					sourceFile = '';
+				}
+				else {
+					sourceFile = sourceFile.substring('a/'.length);
+				}
 			}
-			let targetFile = diffLines.find(l => l.startsWith('+++ ')).substr('+++ '.length);
-			if (targetFile === '/dev/null') {
-				// Deleted file, target is ''
-				targetFile = '';
+			
+			// Parse files changed/added/deleted
+			// Or just a file rename
+			const targetLine =
+				diffLines.find(l => l.startsWith('+++ '))
+				||
+				diffLines.find(l => l.startsWith('rename to '));
+			
+			let targetFile = null;
+			if (targetLine.startsWith('rename to ')) {
+				targetFile = targetLine.substring('rename to '.length);
 			}
 			else {
-				targetFile = targetFile.substring('b/'.length);
+				targetFile = sourceLine?.substr('+++ '.length);
+				
+				if (targetFile === '/dev/null') {
+					// Deleted file, target is ''
+					targetFile = '';
+				}
+				else {
+					targetFile = targetFile.substring('b/'.length);
+				}
 			}
+			
 			return {
 				sourceFile,
 				targetFile,
@@ -159,3 +188,37 @@ assert.equal(parsed1.diffs[1].hunks[2].linesAdded, 1);
 assert.equal(parsed1.diffs[1].hunks[2].addedLines.length, 1);
 assert.equal(parsed1.diffs[1].hunks[2].linesRemoved, 1);
 assert.equal(parsed1.diffs[1].hunks[2].removedLines.length, 1);
+
+const patch2 = `From bf593d996624a4a7581ea7d97f899e1829381553 Mon Sep 17 00:00:00 2001
+From: nhosh <info@nho.sh>
+Date: Thu, 01 Jun 2021 19:00:44 +0200
+Subject: [PATCH] Moved files
+
+---
+ LICENSE => LICENSE-new     | 0
+ README.md => README-new.md | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ rename LICENSE => LICENSE-new (100%)
+ rename README.md => README-new.md (100%)
+
+diff --git a/LICENSE b/LICENSE-new
+similarity index 100%
+rename from LICENSE
+rename to LICENSE-new
+diff --git a/README.md b/README-new.md
+similarity index 100%
+rename from README.md
+rename to README-new.md
+`;
+
+const parsed2 = parsePatch(patch2);
+assert.equal(parsed2.header.length, 364);
+assert.equal(parsed2.diffs.length, 2);
+
+assert.equal(parsed2.diffs[0].sourceFile, 'LICENSE');
+assert.equal(parsed2.diffs[0].targetFile, 'LICENSE-new');
+assert.equal(parsed2.diffs[0].hunks.length, 0);
+
+assert.equal(parsed2.diffs[1].sourceFile, 'README.md');
+assert.equal(parsed2.diffs[1].targetFile, 'README-new.md');
+assert.equal(parsed2.diffs[1].hunks.length, 0);
