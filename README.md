@@ -1,6 +1,6 @@
 # Github PR Reviewer
 
-> Why do a 10 minute task, when you can automate it it in 10 days?
+> Why do a 10 minute task, when you can automate it in 10 days?
 >
 > — a programmer
 
@@ -130,6 +130,11 @@ To avoid API limits, and speed up the reviewing, resolving additional data is op
   <td>This will populate the PR data <code>pr.base_branch</code>, which is a object describing the Github the branch you provide. For full specification, check the Github specification at https://docs.github.com/en/rest/branches/branches#get-a-branch.</td>
 </tr>
 <tr>
+  <td>Checks</td>
+  <td><code>await pr.resolveChecks()</code></td>
+  <td>This will populate the PR data <code>pr.checks</code>, which is an array of Github checks on the last commit sha of the PR branch. For full specification, check the Github check run specification at https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#list-check-runs-for-a-git-reference.<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
+</tr>
+<tr>
   <td>Commits</td>
   <td><code>await pr.resolveCommits()</code></td>
   <td>This will populate the PR data <code>pr.commits</code>, which is an array of Github commits on the branch. For full specification, check the Github commit specification at https://docs.github.com/en/rest/issues/comments#get-an-issue-comment.<br />If it returns <code>true</code>, it can be called again to fetch another page, <code>false</code> means the end was reached.</td>
@@ -201,15 +206,22 @@ These methods are available during reviewer execution:
   <td><code>await pr.behindOnBase()</code></td>
   <td>Returns <code>true</code> if the PR is not fully up-to-date with the base branch. This combines well with the <code>update-branch</code> action, which by default in GH, will always update, creating empty merge commits. Use this method to detect if something is really not included yet.</td>
 </tr>
+<tr>
+  <td><code>await pr.statusAndChecksOkay()</code></td>
+  <td>Returns <code>null</code> if the PR is checks and statuses are all succesful. If something is failing or not yet finished, this function returns a string summary of the first found issue. (this internally calls `resolveStatus` and `resolveChecks`.</td>
+</tr>
 </table>
 
 ### Testing your reviewer before putting it live
 
-No integration tests exist atm, but use the DRY_RUN on real
-repositories to safely try out your reviewers.
+No integration tests exist atm, but set the `DRY_RUN`/`DRYRUN` ENV variable on real
+repositories to safely try out your reviewers. It will summarize what would happen,
+without actually performing the action.
 
 ```sh
 DRY_RUN=true \
 ... \
 node index.js
 ```
+
+alternatively, pass `--dryrun=true` or `--dry-run=true`

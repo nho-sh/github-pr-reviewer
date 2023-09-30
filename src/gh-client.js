@@ -3,6 +3,7 @@ const PullRequest = require('./pull-request');
 const patchParser = require('./patch-parser');
 
 const pageSize = {
+	checks: 100,
 	comments: 100,
 	commits: 100,
 	files: 100,
@@ -46,6 +47,21 @@ const fetchPrFiles = async ({ repo, user, pass }, prID, { page = 1 } = defaultOp
 	processGhResponse(pr);
 
 	return pr.map(f => f.filename);
+};
+
+const fetchPrLastCommitChecks = async ({ repo, user, pass }, commitID, { page = 1 } = defaultOpts) => {
+	
+	const headers = ghHeaders(user, pass);
+	
+	const checkRuns = await getJson(
+		`https://api.github.com/repos/${repo}/commits/${commitID}/check-runs?per_page=${pageSize.checks}&page=${page}`,
+		{
+			headers: headers
+		}
+	);
+	processGhResponse(checkRuns);
+
+	return checkRuns.check_runs;
 };
 
 const fetchPrPatch = async ({ repo, user, pass }, prID) => {
@@ -166,6 +182,23 @@ const listOpenPRs = async ({ repo, user, pass }, { page = 1 } = defaultOpts) => 
 		prObj.resolveBaseBranch = async () => {
 			prObj.base_branch = await fetchBranch({ repo, user, pass }, prObj.pr.base.ref);
 			prObj.resolveBaseBranch = function() {};
+		};
+		prObj.resolveChecks = async () => {
+			const checks = await fetchPrLastCommitChecks({ repo, user, pass }, prObj.pr.head.sha, { page: prObj.resolveChecksPage });
+			
+			prObj.checks = [
+				...(prObj.checks || []),
+				...checks,
+			];
+
+			prObj.resolveChecksPage += 1;
+
+			if (checks.length < pageSize.checks) {
+				prObj.resolveChecks = function() {};
+				return false; // Indicate the end was reached
+			}
+
+			return true; // Indicate more can be fetched if desired
 		};
 		prObj.resolveComments = async () => {
 			const comments = await fetchComments({ repo, user, pass }, prObj.pr.number, { page: prObj.resolveCommentsPage });
@@ -496,6 +529,7 @@ module.exports = {
 	fetchBranch,
 	fetchCommits,
 	fetchComments,
+	fetchPrLastCommitChecks,
 	fetchPrPatch,
 	labelPR,
 	listOpenPRs,

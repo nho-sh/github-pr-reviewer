@@ -7,6 +7,8 @@ module.exports = class PullRequest {
 		// Functions that will be added later
 		// for every specific PR
 		this.resolveBaseBranch = null;
+		this.resolveChecks = null;
+		this.resolveChecksPage = 1;
 		this.resolveComments = null;
 		this.resolveCommentsPage = 1;
 		this.resolveCommits = null;
@@ -20,6 +22,7 @@ module.exports = class PullRequest {
 
 		// Placeholders
 		this.base_branch = null;
+		this.checks = null;
 		this.comments = null;
 		this.commits = null;
 		this.files = null;
@@ -56,5 +59,24 @@ module.exports = class PullRequest {
 		});
 		
 		return !latestBaseCommitInCommitsOrParents;
+	}
+
+	async statusAndChecksOkay() {
+		await this.resolveStatus();
+
+		if (this.status.state !== 'success') {
+			return `Status not okay: ${this.status.state}`;
+		}
+
+		while (await this.resolveChecks()) {
+		}
+
+		const firstBad = this.checks.find(c =>  c.conclusion !== 'success');
+
+		if (firstBad) {
+			return `Github check not okay: ${firstBad.name} = ${firstBad.conclusion} ${firstBad.html_url}`;
+		}
+
+		return null;
 	}
 }
