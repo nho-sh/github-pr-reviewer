@@ -21,6 +21,10 @@ const PR_NUMBER = (
   .filter(v => !!v)
   .map(v => parseInt(v, 10));
 
+const PR_STATE = (
+	getArg('pr-state') || process.env.PR_STATE || 'open'
+);
+
 const GITHUB_PASS = getArg('github-pass') || process.env.GITHUB_PASS || '';
 const GITHUB_USER = getArg('github-user') || process.env.GITHUB_USER || '';
 
@@ -40,8 +44,13 @@ if (!REVIEWER_FOLDER) {
 	throw new Error("Missing REVIEWER_FOLDER env, dont know local reviewer files to use");
 }
 
+if (!['open', 'closed', 'all'].includes(PR_STATE)) {
+	throw new Error("Invalid --pr-state or ENV PR_STATE : should be 'open', 'closed' or 'all'");
+}
+
 module.exports = {
 	PR_NUMBER,
+	PR_STATE,
 	DRY_RUN,
 	GITHUB_REPO,
 	GITHUB_PASS,

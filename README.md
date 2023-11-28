@@ -4,10 +4,10 @@
 >
 > — a programmer
 
-A `nodejs` based Github PR Reviewer which can be easily turned into a bot. This works on a GitHub repo, by finding open PR's
+A `nodejs` based Github PR Reviewer which can be easily turned into a bot. This works on a GitHub repo, by finding (open) PR's
 and taking actions on them.
 
-Github PR Reviewer makes it very easy to interact with open pull requests, allowing you to focus fully on automating checks. Every PR will be passing through your own rule-set, and where needed, the actions you define will be executed for each PR.
+Github PR Reviewer makes it very easy to interact with pull requests, allowing you to focus fully on automating checks. Every PR will be passing through your own rule-set, and where needed, the actions you define will be executed for each PR.
 
 ## Installation
 
@@ -44,7 +44,8 @@ node index.js
 
 | Argument | Docs |
 | -------- | ---- |
-| `--pr-number=123,500` <br>(Optional) | PR number or numbers \(comma seperated\)<br> |
+| `--pr-number=123,500` <br>(Optional) | PR number or numbers \(comma seperated\)<br> Alternatively, you can pass it via ENV `PR_NUMBER`. |
+| `--pr-state=open` <br>(Optional) | State of the PRs, can be 'open', 'closed' or 'all'. Default: 'open'<br>  Alternatively, you can pass it via ENV `PR_NUMBER`. |
 
 ## Implementing a PR reviewer
 
@@ -115,7 +116,7 @@ a magic word in it, and later, skipping PR's with that expected magic word in a 
 
 ### Resolving additional PR details
 
-When Github is contacted for PR information, the default behaviour is to return some basic set of data on every open PR.
+When Github is contacted for PR information, the default behaviour is to return some basic set of data on every PR.
 To avoid API limits, and speed up the reviewing, resolving additional data is opt-in.
 
 <table>

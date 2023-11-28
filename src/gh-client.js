@@ -146,13 +146,14 @@ const fetchPrStatus = async ({ repo, user, pass }, commitID) => {
 	return prStatus;
 };
 
-const listOpenPRs = async ({ repo, user, pass }, { page = 1 } = defaultOpts) => {
+// state = open | closed | all
+const listPRs = async ({ repo, user, pass }, { page = 1, state } = defaultOpts) => {
 	
 	if (process.env.MOCK) {
 		return [];
 	}
 	
-	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls?per_page=${pageSize.prs}&page=${page}`, {
+	const prs = await getJson(`https://api.github.com/repos/${repo}/pulls?per_page=${pageSize.prs}&page=${page}&state=${state}`, {
 		headers: ghHeaders(user, pass)
 	});
 	processGhResponse(prs);
@@ -532,7 +533,7 @@ module.exports = {
 	fetchPrLastCommitChecks,
 	fetchPrPatch,
 	labelPR,
-	listOpenPRs,
+	listPRs,
 	mergePR,
 	requestChanges,
 	reviewCommentPR,

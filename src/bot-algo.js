@@ -7,6 +7,7 @@ if (process.env.MOCK) {
 // Fetch the ENV variables after checking them
 const {
 	PR_NUMBER,
+	PR_STATE,
 	DRY_RUN,
 	GITHUB_REPO,
 	GITHUB_PASS,
@@ -25,7 +26,7 @@ const {
 	closePR,
 	commentPR,
 	labelPR,
-	listOpenPRs,
+	listPRs,
 	mergePR,
 	requestChanges,
 	reviewCommentPR,
@@ -39,14 +40,14 @@ const algo = async () => {
 		repo: GITHUB_REPO, user: GITHUB_USER, pass: GITHUB_PASS
 	};
 
-	// See if the limit of open PRs is reached
-	const prs = await listOpenPRs(ghAuth);
+	// See if the limit of PRs is reached
+	const prs = await listPRs(ghAuth, { state: PR_STATE});
 	if (prs.length === 0) {
 		console.warn(`Skipping run, nothing to review (PR list is empty)`);
 		return;
 	}
 	else {
-		console.log(`Found ${prs.length} open PRs to review`);
+		console.log(`Found ${prs.length} PRs to review`);
 	}
 	if (PR_NUMBER.length) {
 		console.log(`But will only check PRs:`, PR_NUMBER);
