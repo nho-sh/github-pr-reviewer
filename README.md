@@ -418,6 +418,25 @@ Remove a single label from a PR. Note that you cannot use an array for this acti
 </tr>
 
 <tr>
+  <td>Create/update a status</td>
+  <td>
+
+```js
+{
+  action: 'create-status',
+  sha: '<commit-sha>',
+  description: '<optional further details>',
+  context: '<context name>',
+  targetUrl: '<optional link>',
+  state: 'success|failure|pending|error'
+}
+```
+
+Create or replace a status of a PR. Use this to block PRs from merging until your custom checks are satisfied. Note that previous statuses with the same context name will be overwritten.
+   </td>
+</tr>
+
+<tr>
   <td>Merge a PR</td>
   <td>
 

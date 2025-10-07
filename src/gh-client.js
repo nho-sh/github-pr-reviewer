@@ -550,20 +550,70 @@ const updateBranch = async ({ repo, user, pass }, {
 	return true;
 };
 
+// https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
+const createStatus = async ({ repo, user, pass }, {
+	sha,
+	state, // error | failure | pending | success
+	targetUrl,
+	description,
+	context
+}) => {
+	if (process.env.MOCK) {
+		return true;
+	}
+
+	const reqData = {
+		state: state
+	};
+
+	if (targetUrl) reqData.target_url = targetUrl;
+	if (description) reqData.description = description;
+	if (context) reqData.context = context;
+
+	const headers = ghHeaders(user, pass);
+	headers['Accept'] = 'application/vnd.github.v3+json';
+
+	const response = await postJson(
+		`https://api.github.com/repos/${repo}/statuses/${sha}`,
+		reqData,
+		{
+			headers: headers
+		}
+	);
+
+	processGhResponse(response);
+
+	return response;
+};
+
 module.exports = {
-	approvePR,
-	closePR,
+	// Comments
+	fetchComments,
 	commentPR,
+
+	// Statuses
+	createStatus,
+
+	// Checks
+	fetchPrLastCommitChecks,
+
+	// Branches
 	fetchBranch,
 	fetchCommits,
-	fetchComments,
-	fetchPrLastCommitChecks,
 	fetchPrPatch,
+
+	// Labels
 	labelPR,
+	unlabelPR,
+
+	// Review
+	reviewCommentPR,
+	requestChanges,
+
+	// PRs
 	listPRs,
 	mergePR,
-	requestChanges,
-	reviewCommentPR,
-	unlabelPR,
 	updateBranch,
+	approvePR,
+	closePR,
 };

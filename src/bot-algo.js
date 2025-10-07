@@ -22,16 +22,29 @@ if (DRY_RUN) {
 const { review, loadReviewers } = require('./review-runner');
 
 const {
-	approvePR,
-	closePR,
+	// Comments
 	commentPR,
+	// TODO: remove comment
+
+	// Statuses
+	createStatus,
+
+	// Labels
 	labelPR,
+	unlabelPR,
+
+	// PRs
 	listPRs,
 	mergePR,
-	requestChanges,
-	reviewCommentPR,
-	unlabelPR,
 	updateBranch,
+	approvePR,
+	closePR,
+
+	// Review
+	reviewCommentPR,
+	requestChanges,
+
+	// Branches
 } = require("./gh-client.js");
 
 const algo = async () => {
@@ -81,6 +94,8 @@ const algo = async () => {
 				changesRequested: [],
 				reviewComments: [],
 				updateBranch: false,
+
+				createStatuses: [],
 			};
 			
 			for (const reviewer of reviewers) {
@@ -114,6 +129,9 @@ const algo = async () => {
 			const close = allActions.find(a => a.action === 'close');
 			const shouldUpdateBranch = allActions.find(a => a.action === 'update-branch');
 			const afterReviews = allActions.filter(a => a.action === 'after-review');
+			
+			// Statuses
+			const createStatuses = allActions.filter(a => a.action === 'create-status');
 			
 			// Group all the labels we want to add
 			const allAddLabels = addLabels.map(l => l.labels).flat();
@@ -177,7 +195,14 @@ const algo = async () => {
 
 					actionsTaken.changesRequested.push(change.change);
 			}
-			
+
+			for (const cs of createStatuses) {
+				console.log(` - creating status (${cs.state}):`, cs.context);
+				DRY_RUN || await createStatus(ghAuth, { prNumber: prNum, sha: cs.sha, description: cs.description, context: cs.context, targetUrl: cs.targetUrl, state: cs.state });
+
+				actionsTaken.createStatuses.push(cs.context);
+			}
+
 			if (shouldUpdateBranch) {
 				console.log(` - updating branch with base`);
 				DRY_RUN || await updateBranch(ghAuth, { prNumber: prNum });

@@ -28,6 +28,7 @@ module.exports = {
 			{ action: 'comment', comment: 'I like this' },
 			{ action: 'label', labels: ['A', 'B'] },
 			{ action: 'unlabel', label: 'A'},
+			{ action: 'create-status', sha: 'abc...', context: 'My custom status', status: 'pending', description: 'Waiting for results to be added', targetUrl: 'https://my-server' },
 			{ action: 'request-changes', changes: 'This looks fuky'},
 			{ action: 'review-comment', comment: 'Better change this, i mean, come-on!', path: pr.files[0], line: 1},
 			{ action: 'after-review', handler: async (pr) => {
