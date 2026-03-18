@@ -54,7 +54,7 @@ const algo = async () => {
 	};
 
 	// See if the limit of PRs is reached
-	const prs = await listPRs(ghAuth, { state: PR_STATE});
+	const prs = (await listPRs(ghAuth, { state: PR_STATE})) || [];
 	if (prs.length === 0) {
 		console.warn(`Skipping run, nothing to review (PR list is empty)`);
 		return;
@@ -63,7 +63,7 @@ const algo = async () => {
 		console.log(`Found ${prs.length} PRs to review`);
 	}
 	if (PR_NUMBER.length) {
-		console.log(`But will only check PRs:`, PR_NUMBER);
+		console.log(`  but will only check PRs:`, PR_NUMBER);
 	}
 	
 	const reviewers = loadReviewers(REVIEWER_FOLDER);
@@ -243,7 +243,7 @@ const algo = async () => {
 			}
 		}
 		catch (err) {
-			console.log(` - Wrapping up PR ${prNum} after error`, err.stack);
+			console.error(` - Wrapping up PR ${prNum} after error`, err.stack);
 		}
 	}
 };
