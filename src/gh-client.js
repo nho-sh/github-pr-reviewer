@@ -31,7 +31,7 @@ const processGhResponse = (response) => {
 	}
 
 	if (response.errors) {
-		console.error('Error:\n' + response.errors.join('\n'));
+		console.error('Error:', response.errors);
 	}
 };
 
